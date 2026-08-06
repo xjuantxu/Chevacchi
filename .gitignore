@@ -7,16 +7,11 @@ __pycache__/
 .venv/
 venv/
 
-# Variables de entorno
+# Variables
 .env
-
-# Datos del bot
-data/
-logs/
 
 # VS Code
 .vscode/
 
-# Sistema
-.DS_Store
-Thumbs.db
+# Logs
+*.log
