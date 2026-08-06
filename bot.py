@@ -8,13 +8,15 @@ logger = get_logger(__name__)
 
 
 async def main():
-    logger.info("Iniciando Chevacchi...")
+    try:
+        config = Config.load()
 
-    config = Config.load()
+        twitch = TwitchClient(config)
 
-    twitch = TwitchClient(config)
+        await twitch.connect()
 
-    await twitch.connect()
+    except Exception:
+        logger.exception("Chevacchi no pudo iniciarse.")
 
 
 if __name__ == "__main__":
