@@ -1,16 +1,12 @@
 from twitchAPI.twitch import Twitch
-from twitchAPI.type import AuthScope
+from twitchAPI.type import AuthScope, AuthType
 from twitchAPI.type import InvalidTokenException
 from .chat import TwitchChat
+from twitchAPI.type import AuthType
+from twitch.scopes import SCOPES
 
 from config import Config
 from utils.logger import get_logger
-
-
-SCOPES = [
-    AuthScope.USER_READ_CHAT,
-    AuthScope.USER_WRITE_CHAT,
-]
 
 class TwitchClient:
 
@@ -19,6 +15,7 @@ class TwitchClient:
 
         self.config = config
         self.chat = TwitchChat(self)
+
         self.api: Twitch | None = None
         self.user = None
 
@@ -48,6 +45,7 @@ class TwitchClient:
         )
 
         self.api.user_auth_refresh_callback = self._on_refresh
+        
 
     async def _load_user(self):
 

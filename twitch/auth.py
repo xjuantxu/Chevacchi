@@ -1,15 +1,12 @@
 from twitchAPI.oauth import UserAuthenticator
 from twitchAPI.twitch import Twitch
 from twitchAPI.type import AuthScope
+from twitch.scopes import SCOPES
 
 from config import Config
 from utils.logger import get_logger
 
 
-SCOPES = [
-    AuthScope.USER_READ_CHAT,
-    AuthScope.USER_WRITE_CHAT,
-]
 
 
 class TwitchAuthenticator:
