@@ -1,6 +1,7 @@
 from twitchAPI.twitch import Twitch
 from twitchAPI.type import AuthScope
 from twitchAPI.type import InvalidTokenException
+from .chat import TwitchChat
 
 from config import Config
 from utils.logger import get_logger
@@ -17,7 +18,7 @@ class TwitchClient:
         self.logger = get_logger(__name__)
 
         self.config = config
-
+        self.chat = TwitchChat(self)
         self.api: Twitch | None = None
         self.user = None
 
@@ -30,6 +31,8 @@ class TwitchClient:
         await self._authenticate()
 
         await self._load_user()
+
+        await self.chat.connect()
 
         self.logger.info("Conexión completada.")
 
@@ -60,7 +63,7 @@ class TwitchClient:
 
             return
 
-    raise RuntimeError("No se pudo obtener la información del usuario.")
+        raise RuntimeError("No se pudo obtener la información del usuario.")
 
     async def _on_refresh(self, access_token, refresh_token):
 
