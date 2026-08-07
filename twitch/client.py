@@ -1,10 +1,15 @@
 from twitchAPI.twitch import Twitch
+from twitchAPI.type import AuthScope
+from twitchAPI.type import InvalidTokenException
 
 from config import Config
 from utils.logger import get_logger
 
-from .auth import TwitchAuthenticator
 
+SCOPES = [
+    AuthScope.USER_READ_CHAT,
+    AuthScope.USER_WRITE_CHAT,
+]
 
 class TwitchClient:
 
@@ -16,18 +21,13 @@ class TwitchClient:
         self.api: Twitch | None = None
         self.user = None
 
-        self.auth = TwitchAuthenticator(self)
-
     async def connect(self):
 
         self.logger.info("Conectando con Twitch...")
 
         await self._create_api()
 
-        authenticated = await self.auth.authenticate()
-
-        if not authenticated:
-            raise RuntimeError("No se ha podido autenticar con Twitch.")
+        await self._authenticate()
 
         await self._load_user()
 
@@ -47,7 +47,20 @@ class TwitchClient:
         self.api.user_auth_refresh_callback = self._on_refresh
 
     async def _load_user(self):
-        pass
+
+        users = self.api.get_users()
+
+        async for user in users:
+
+            self.user = user
+
+            self.logger.info(
+                f"Conectado como {user.display_name} (@{user.login})"
+            )
+
+            return
+
+    raise RuntimeError("No se pudo obtener la información del usuario.")
 
     async def _on_refresh(self, access_token, refresh_token):
 
@@ -58,35 +71,22 @@ class TwitchClient:
 
         self.config.save()
 
-    async def _authorize(self) -> bool:
+    async def _authenticate(self):
 
-        self.logger.info("Entrando en _authorize()")
+        self.logger.info("Autenticando...")
 
         try:
-            self.logger.info("Creando UserAuthenticator...")
 
-            auth = UserAuthenticator(
-                self.api,
+            await self.api.set_user_authentication(
+                self.config.access_token,
                 SCOPES,
-                force_verify=False
+                self.config.refresh_token,
             )
 
-            self.logger.info("Llamando a authenticate()...")
+            self.logger.info("Autenticación correcta.")
 
-            access_token, refresh_token = await auth.authenticate()
-
-            self.logger.info("authenticate() finalizado.")
-
-            self.config.access_token = access_token
-            self.config.refresh_token = refresh_token
-
-            self._save_tokens()
-
-            self.logger.info("Credenciales guardadas correctamente.")
-
-            return True
-
-        except Exception:
-            self.logger.exception("Error durante la autorización.")
-            return False
-                
+        except InvalidTokenException:
+            self.logger.error(
+                "Los tokens no son válidos. Ejecuta: python -m scripts.auth"
+            )
+            raise
